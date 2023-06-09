@@ -96,5 +96,39 @@ namespace Calculator
         {
             txtResult.Text = "";
         }
+        private double EvaluateExpression(string expression)
+        {
+            var dataTable = new System.Data.DataTable();
+            var result = dataTable.Compute(expression, "");
+            return Convert.ToDouble(result);
+        }
+        private void button_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void btnEqual_Click(object sender, EventArgs e)
+        {
+            Button button = (Button)sender;
+
+            if (button.Text == "=")
+            {
+                try
+                {
+                    string expression = txtResult.Text;
+                    double result = EvaluateExpression(expression);
+                    txtResult.Text = result.ToString();
+                }
+                catch
+                {
+                    txtResult.Text = "Error";
+                }
+            }
+
+            //else
+            //{
+            //    txtResult.Text += button.Text;
+            //}
+        
+    }
     }
 }
