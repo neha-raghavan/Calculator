@@ -8,4 +8,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Jace" Version="1.0.0" />
+    <PackageReference Include="MathExpression.net" Version="1.1.0.2006" />
+    <PackageReference Include="Mathos" Version="1.0.5.1" />
+    <PackageReference Include="MathosParser" Version="2.0.0" />
+    <PackageReference Include="MathParser.org-mXparser" Version="5.2.1" />
+    <PackageReference Include="ncalc" Version="1.3.8" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
+  </ItemGroup>
+
 </Project>
