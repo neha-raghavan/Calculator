@@ -1,7 +1,17 @@
+using System.Configuration;
+using System.Data.SqlClient;
+using System.Text.RegularExpressions;
+
+
+
 namespace Calculator
 {
     public partial class Form1 : Form
     {
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString);
+        string expression;
+        double result;
+
         public Form1()
         {
             InitializeComponent();
@@ -95,6 +105,61 @@ namespace Calculator
         private void btnClear_Click(object sender, EventArgs e)
         {
             txtResult.Text = "";
+        }
+     
+        static double EvaluateExpression(string expression)
+        {
+            // Add a multiplication operator (*) before a bracket if no operator is present
+            expression = Regex.Replace(expression, @"([\d.]+)\s*\(", "$1 * (");
+
+            // Evaluate the modified expression
+            return Evaluate(expression);
+        }
+
+        static double Evaluate(string expression)
+        {
+            var dataTable = new System.Data.DataTable();
+            var result = dataTable.Compute(expression, "");
+            return Convert.ToDouble(result);
+        }
+
+        private void btnEqual_Click(object sender, EventArgs e)
+        {
+            Button button = (Button)sender;
+
+            if (button.Text == "=")
+            {
+                try
+                {
+                    expression = txtResult.Text;
+                    result = EvaluateExpression(expression);
+                    txtResult.Text = result.ToString();
+                }
+                catch
+                {
+                    txtResult.Text = "Error";
+                }
+            }
+
+            con.Open();
+            string qry = "INSERT INTO Calc  (Exp,Result) VALUES (@Exp, @Result)";
+
+
+
+            using (SqlCommand cmd = new SqlCommand(qry, con))
+            {
+                cmd.Parameters.AddWithValue("@Exp", expression);
+                cmd.Parameters.AddWithValue("@Result", result);
+
+                cmd.ExecuteNonQuery();
+            }
+
+
+            con.Close();
+            MessageBox.Show("Inserted sucessfully");
+
+
+
         }
     }
 }
