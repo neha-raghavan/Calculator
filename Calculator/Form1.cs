@@ -1,5 +1,7 @@
 using System.Configuration;
+using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics.Eventing.Reader;
 using System.Text.RegularExpressions;
 
 
@@ -9,8 +11,9 @@ namespace Calculator
     public partial class Form1 : Form
     {
         SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString);
-        string expression;
+        string expression, data;
         double result;
+        int CommunicatedRecordsCount;
 
         public Form1()
         {
@@ -106,7 +109,7 @@ namespace Calculator
         {
             txtResult.Text = "";
         }
-     
+
         static double EvaluateExpression(string expression)
         {
             // Add a multiplication operator (*) before a bracket if no operator is present
@@ -126,14 +129,62 @@ namespace Calculator
         private void btnEqual_Click(object sender, EventArgs e)
         {
             Button button = (Button)sender;
-
+            CommunicatedRecordsCount = 0;
             if (button.Text == "=")
             {
+
                 try
                 {
-                    expression = txtResult.Text;
-                    result = EvaluateExpression(expression);
-                    txtResult.Text = result.ToString();
+                    con.Open();
+                    string query = "select * from Calc where Exp like '" + txtResult.Text + "'";
+
+                    using (SqlCommand command = new SqlCommand(query, con))
+                    {
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+
+                            while (reader.Read())
+                            {
+                                CommunicatedRecordsCount = (int)reader[0];
+                                data = (string)reader[2];
+
+                            }
+                            reader.Close();
+                            con.Close();
+                        }
+                    }
+
+                    if (CommunicatedRecordsCount > 0)
+                    {
+                        txtResult.Text = data;
+
+                    }
+
+                    else
+                    {
+                        expression = txtResult.Text;
+                        result = EvaluateExpression(expression);
+                        txtResult.Text = result.ToString();
+
+                        string qry = "INSERT INTO Calc  (Exp,Result) VALUES (@Exp, @Result)";
+
+
+                        con.Open();
+                        using (SqlCommand cmd = new SqlCommand(qry, con))
+                        {
+                            cmd.Parameters.AddWithValue("@Exp", expression);
+                            cmd.Parameters.AddWithValue("@Result", result);
+
+                            cmd.ExecuteNonQuery();
+                        }
+
+
+                        con.Close();
+                        MessageBox.Show("Inserted sucessfully");
+
+                    }
+
+
                 }
                 catch
                 {
@@ -141,25 +192,9 @@ namespace Calculator
                 }
             }
 
-            con.Open();
-            string qry = "INSERT INTO Calc  (Exp,Result) VALUES (@Exp, @Result)";
-
-
-
-            using (SqlCommand cmd = new SqlCommand(qry, con))
-            {
-                cmd.Parameters.AddWithValue("@Exp", expression);
-                cmd.Parameters.AddWithValue("@Result", result);
-
-                cmd.ExecuteNonQuery();
-            }
-
-
-            con.Close();
-            MessageBox.Show("Inserted sucessfully");
-
-
-
         }
     }
 }
+
+
+
